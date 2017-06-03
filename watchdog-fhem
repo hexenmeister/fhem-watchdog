@@ -1,0 +1,66 @@
+#!/bin/sh
+# description: Start or stop the fhem server
+# Added by Alexander Schulz
+
+### BEGIN INIT INFO
+# Provides:             watchdog.pl
+# Required-Start:       $local_fs $remote_fs
+# Required-Stop:        $local_fs $remote_fs
+# Default-Start:        2 3 4 5
+# Default-Stop:         0 1 6
+# Short-Description:    Process Watchdog
+### END INIT INFO
+
+set -e
+cd /opt/fhem/watchdog
+USERNAME='fhem'
+CONFIGFILE=watchdog_fhem.cfg
+VERBOSE=5
+
+case "$1" in
+'start')
+
+        echo "Starting watchdog..."
+
+mkdir -p /var/run/fhem
+chown -R fhem:root /var/run/fhem
+#chmod a+rw /var/run/fhem
+
+# if you need to start hmland for use with
+# Homematic, please start the hmland daemon
+# like this (please use correct path and port, 
+# depending on your installation!)
+#
+#       /opt/hmcfgusb/hmland -d -p 1234 -r 0
+#
+
+        sudo -u $USERNAME perl watchdog.pl -c $CONFIGFILE -v $VERBOSE
+
+        RETVAL=$?
+        ;;
+'stop')
+        echo "Stopping watchdog..."
+
+# if you want to stop hmland during fhem stop:
+#       pkill hmland
+
+        #pkill -U watchdog perl
+        #pkill watchdog.pl
+        #TODO
+        RETVAL=$?
+        ;;
+'status')
+#TODO: Delegate to Watchdog script
+        cnt=`ps -ef | grep "watchdog.pl -c $CONFIGFILE" | grep -v grep | wc -l`
+        if [ "$cnt" -eq "0" ] ; then
+                echo "watchdog is not running"
+        else
+                echo "watchdog is running"
+        fi
+        ;;
+*)
+        echo "Usage: $0 { start | stop | status }"
+        RETVAL=1
+        ;;
+esac
+exit $RETVAL
